@@ -48,7 +48,9 @@ func main() {
 		panic(err.Error() + " " + string(dat))
 	}
 	defer exec.Command("rm", "-rf", "work").Run()
-	if dat, err := exec.Command("git", "-C", "work", "checkout", submatches[2]).Output(); err != nil {
+	cmd := exec.Command("git", "-C", "work", "checkout", submatches[2])
+	fmt.Println(cmd.Args)
+	if dat, err := cmd.Output(); err != nil {
 		panic(err.Error() + " " + string(dat))
 	}
 	dat, err := ioutil.ReadFile("work/" + submatches[3])
