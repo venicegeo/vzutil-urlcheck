@@ -49,6 +49,8 @@ func main() {
 	}
 	defer exec.Command("rm", "-rf", "work").Run()
 	cmd := exec.Command("git", "-C", "work", "checkout", submatches[2])
+	dat, _ := exec.Command("ls").Output()
+	fmt.Println(string(dat))
 	fmt.Println(cmd.Args)
 	if dat, err := cmd.Output(); err != nil {
 		panic(err.Error() + " " + string(dat))
