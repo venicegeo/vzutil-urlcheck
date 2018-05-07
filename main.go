@@ -48,12 +48,9 @@ func main() {
 		panic(err.Error() + " " + string(dat))
 	}
 	defer exec.Command("rm", "-rf", "work").Run()
-	cmd := exec.Command("git", "checkout", submatches[2])
-	cmd.Dir = "work"
-	dat, _ := exec.Command("ls").Output()
-	fmt.Println(string(dat))
-	fmt.Println(cmd.Args)
-	if dat, err := cmd.Output(); err != nil {
+	checkout := exec.Command("git", "checkout", submatches[2])
+	checkout.Dir = "work"
+	if dat, err := checkout.Output(); err != nil {
 		panic(err.Error() + " " + string(dat))
 	}
 	dat, err := ioutil.ReadFile("work/" + submatches[3])
@@ -86,7 +83,7 @@ func main() {
 					}
 					code, _, _, err := nt.HTTP(nt.GET, part, header, nil)
 					if err != nil || code != 200 {
-						fmt.Printf("FAILED %s Code: [%d] Error: [%s]\n", part, code, err)
+						fmt.Printf("FAILED %s Code: [%d] Error: [%#v]\n", part, code, err)
 					} else {
 						fmt.Println("PASSED", part)
 					}
