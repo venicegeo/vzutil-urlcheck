@@ -21,6 +21,8 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"os/exec"
 	"regexp"
 	"strings"
 	"sync"
@@ -30,9 +32,26 @@ import (
 
 var basic = nt.NewHeaderBuilder().GetHeader()
 var gitlab = nt.NewHeaderBuilder().GetHeader()
+var locationRE = regexp.MustCompile(`^(https:\/\/git(?:(?:hub)|(?:lab))\.com\/[^\/]+\/[^\/]+)\/blob\/([^\/]+)\/(.+)$`)
+var split = regexp.MustCompile(`,| |\n|(?:\.$)|(?:\. )`)
 
 func main() {
-	dat, err := ioutil.ReadFile("test.csv")
+	gitLocation := os.Getenv("CSV_LOCATION")
+	if gitLocation == "" {
+		panic("Not git location specified")
+	}
+	submatches := locationRE.FindStringSubmatch(gitLocation)
+	if len(submatches) != 4 {
+		panic("Cannot work with this location")
+	}
+	if err := exec.Command("git", "clone", submatches[1], "work").Run(); err != nil {
+		panic(err)
+	}
+	defer exec.Command("rm", "-rf", "work").Run()
+	if err := exec.Command("git", "-C", "work", "checkout", submatches[2]).Run(); err != nil {
+		panic(err)
+	}
+	dat, err := ioutil.ReadFile("work/" + submatches[3])
 	if err != nil {
 		panic(err)
 	}
@@ -45,11 +64,10 @@ func main() {
 	for _, r := range records {
 		go func(row []string) {
 			for _, item := range row {
-				if item == "" {
+				if item == "" || !strings.Contains(item, "http") {
 					continue
 				}
-				re := regexp.MustCompile(`,| |\n|(?:\.$)|(?:\. )`)
-				parts := re.Split(item, -1)
+				parts := split.Split(item, -1)
 				for _, part := range parts {
 					if part == "" {
 						continue

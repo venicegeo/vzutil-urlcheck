@@ -51,7 +51,6 @@ node {
         ]) {
             sh """
               cd "\$GOPATH/src/github.com/venicegeo/vzutil-urlcheck"
-			  mv test.csv ${root}/
               go install
             """
         }
