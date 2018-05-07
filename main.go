@@ -48,7 +48,8 @@ func main() {
 		panic(err.Error() + " " + string(dat))
 	}
 	defer exec.Command("rm", "-rf", "work").Run()
-	cmd := exec.Command("git", "-C", "work", "checkout", submatches[2])
+	cmd := exec.Command("git", "checkout", submatches[2])
+	cmd.Dir = "work"
 	dat, _ := exec.Command("ls").Output()
 	fmt.Println(string(dat))
 	fmt.Println(cmd.Args)
