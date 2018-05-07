@@ -44,12 +44,12 @@ func main() {
 	if len(submatches) != 4 {
 		panic("Cannot work with this location")
 	}
-	if err := exec.Command("git", "clone", submatches[1], "work").Run(); err != nil {
-		panic(err)
+	if dat, err := exec.Command("git", "clone", submatches[1], "work").Output(); err != nil {
+		panic(err.Error() + " " + string(dat))
 	}
 	defer exec.Command("rm", "-rf", "work").Run()
-	if err := exec.Command("git", "-C", "work", "checkout", submatches[2]).Run(); err != nil {
-		panic(err)
+	if dat, err := exec.Command("git", "-C", "work", "checkout", submatches[2]).Output(); err != nil {
+		panic(err.Error() + " " + string(dat))
 	}
 	dat, err := ioutil.ReadFile("work/" + submatches[3])
 	if err != nil {
