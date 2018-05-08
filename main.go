@@ -32,7 +32,7 @@ import (
 
 var basic = nt.NewHeaderBuilder().GetHeader()
 var gitlab = nt.NewHeaderBuilder().GetHeader()
-var locationRE = regexp.MustCompile(`^(https:\/\/git(?:(?:hub)|(?:lab))\.com\/[^\/]+\/[^\/]+)\/blob\/([^\/]+)\/(.+)$`)
+var locationRE = regexp.MustCompile(`^(https:\/\/git[^\/]+\/[^\/]+\/[^\/]+)\/blob\/([^\/]+)\/(.+)$`)
 var split = regexp.MustCompile(`,| |\n|(?:\.$)|(?:\. )`)
 
 func main() {
