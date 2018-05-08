@@ -44,8 +44,10 @@ func main() {
 	if len(submatches) != 4 {
 		panic("Cannot work with this location")
 	}
-	if dat, err := exec.Command("git", "clone", submatches[1], "work").Output(); err != nil {
-		panic(err.Error() + " " + string(dat))
+	if _, err := os.Stat("work"); os.IsNotExist(err) {
+		if dat, err := exec.Command("git", "clone", submatches[1], "work").Output(); err != nil {
+			panic(err.Error() + " " + string(dat))
+		}
 	}
 	defer exec.Command("rm", "-rf", "work").Run()
 	checkout := exec.Command("git", "checkout", submatches[2])
