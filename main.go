@@ -32,30 +32,25 @@ import (
 
 var basic = nt.NewHeaderBuilder().GetHeader()
 var gitlab = nt.NewHeaderBuilder().GetHeader()
-var locationRE = regexp.MustCompile(`^(https:\/\/git[^\/]+\/[^\/]+\/[^\/]+)\/blob\/([^\/]+)\/(.+)$`)
 var split = regexp.MustCompile(`,| |\n|(?:\.$)|(?:\. )`)
 
 func main() {
 	gitLocation := os.Getenv("CSV_LOCATION")
 	if gitLocation == "" {
-		panic("Not git location specified")
+		panic("No git location specified")
 	}
-	submatches := locationRE.FindStringSubmatch(gitLocation)
-	if len(submatches) != 4 {
-		panic("Cannot work with this location")
-	}
+
 	if _, err := os.Stat("work"); os.IsNotExist(err) {
-		if dat, err := exec.Command("git", "clone", submatches[1], "work").Output(); err != nil {
+		gitRepo := os.Getenv("CSV_REPO")
+		if gitRepo == "" {
+			panic("No git repo specified")
+		}
+		if dat, err := exec.Command("git", "clone", gitRepo, "work").Output(); err != nil {
 			panic(err.Error() + " " + string(dat))
 		}
 	}
 	defer exec.Command("rm", "-rf", "work").Run()
-	checkout := exec.Command("git", "checkout", submatches[2])
-	checkout.Dir = "work"
-	if dat, err := checkout.Output(); err != nil {
-		panic(err.Error() + " " + string(dat))
-	}
-	dat, err := ioutil.ReadFile("work/" + submatches[3])
+	dat, err := ioutil.ReadFile("work/" + gitLocation)
 	if err != nil {
 		panic(err)
 	}
