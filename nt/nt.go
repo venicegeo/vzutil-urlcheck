@@ -63,8 +63,8 @@ func HTTP(requestType, url string, headers [][2]string, toSend io.Reader) (int, 
 	for _, v := range headers {
 		req.Header.Set(v[0], v[1])
 	}
-	client := &http.Client{}
-	response, err := client.Do(req)
+	transport := http.Transport{}
+	response, err := transport.RoundTrip(req)
 	if err != nil {
 		return 0, nil, nil, err
 	}

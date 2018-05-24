@@ -103,10 +103,10 @@ func main() {
 					code, _, _, err := nt.HTTP(nt.GET, part, header, nil)
 					if err != nil {
 						fmt.Printf("FAILED %s Code: [%d] Error: [%s]\n", part, code, err.Error())
-					} else if code != 200 {
+					} else if code != 200 && (code > 304 || code < 299) {
 						fmt.Printf("FAILED %s Code: [%d] Error: []\n", part, code)
 					} else {
-						fmt.Println("PASSED", part)
+						fmt.Printf("PASSED %s Code: [%d]\n", part, code)
 					}
 				}
 			}
