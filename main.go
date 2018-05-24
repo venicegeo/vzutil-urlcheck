@@ -21,6 +21,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"regexp"
@@ -30,33 +31,47 @@ import (
 	"github.com/venicegeo/vzutil-urlcheck/nt"
 )
 
+var creds = map[string][2]string{}
 var basic = nt.NewHeaderBuilder().GetHeader()
-var gitlab = nt.NewHeaderBuilder().GetHeader()
 var split = regexp.MustCompile(`,| |\n|(?:\.$)|(?:\. )`)
 
 func main() {
+	for _, s := range os.Environ() {
+		if !strings.HasPrefix(s, "VZCRED_") {
+			continue
+		}
+		env := strings.SplitN(s, "=", 2)
+		if len(env) != 2 {
+			log.Fatalln("Credential could not be parsed correctly")
+		}
+		parts := strings.SplitN(env[1], " ", 3)
+		if len(parts) != 3 {
+			log.Fatalln("Credential could not be parsed correctly")
+		}
+		creds[parts[0]] = [2]string{parts[1], parts[2]}
+	}
 	gitLocation := os.Getenv("CSV_LOCATION")
 	if gitLocation == "" {
-		panic("No git location specified")
+		log.Fatalln("No git location specified")
 	}
 
 	if _, err := os.Stat("work"); os.IsNotExist(err) {
 		gitRepo := os.Getenv("CSV_REPO")
 		if gitRepo == "" {
-			panic("No git repo specified")
+			log.Fatalln("No git repo specified")
 		}
 		if dat, err := exec.Command("git", "clone", gitRepo, "work").Output(); err != nil {
-			panic(err.Error() + " " + string(dat))
+			log.Fatalln(err.Error() + " " + string(dat))
 		}
 	}
 	defer exec.Command("rm", "-rf", "work").Run()
 	dat, err := ioutil.ReadFile("work/" + gitLocation)
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 	records, err := csv.NewReader(bytes.NewReader(dat)).ReadAll()
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 	wg := sync.WaitGroup{}
 	wg.Add(len(records))
@@ -74,9 +89,16 @@ func main() {
 					if !strings.HasPrefix(part, "http") {
 						continue
 					}
+					if !strings.HasPrefix(part, "https") {
+						log.Println("[WARNING] Will not run against:", part)
+						continue
+					}
 					header := basic
-					if strings.Contains(part, "gitlab") {
-						header = gitlab
+					for k, v := range creds {
+						if strings.HasPrefix(part, k) {
+							header = nt.NewHeaderBuilder().AddBasicAuth(v[0], v[1]).GetHeader()
+							break
+						}
 					}
 					code, _, _, err := nt.HTTP(nt.GET, part, header, nil)
 					if err != nil || code != 200 {
