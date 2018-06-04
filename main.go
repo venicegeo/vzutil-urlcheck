@@ -112,15 +112,23 @@ func main() {
 							if !strings.HasPrefix(part, "http") {
 								continue
 							}
-							if !strings.HasPrefix(part, "https") {
+							//TODO
+							if true && strings.Contains(part, ".mil") {
 								log.Println("[WARNING] Will not run against:", part)
 								continue
 							}
+							skipCreds := false
+							if !strings.HasPrefix(part, "https") {
+								log.Println("[WARNING] Not using https:", part)
+								skipCreds = true
+							}
 							header := basic
-							for k, v := range creds {
-								if strings.HasPrefix(part, k) {
-									header = nt.NewHeaderBuilder().AddBasicAuth(v[0], v[1]).GetHeader()
-									break
+							if !skipCreds {
+								for k, v := range creds {
+									if strings.HasPrefix(part, k) {
+										header = nt.NewHeaderBuilder().AddBasicAuth(v[0], v[1]).GetHeader()
+										break
+									}
 								}
 							}
 							code, _, _, err := nt.HTTP(nt.GET, part, header, nil)
